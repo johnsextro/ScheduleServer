@@ -1,0 +1,38 @@
+application: x8-avian-bricolage-r
+version: 7
+runtime: python27
+api_version: 1
+threadsafe: yes
+
+handlers:
+- url: /favicon\.ico
+  static_files: favicon.ico
+  upload: favicon\.ico
+
+- url: /schedule/.*
+  script: schedule_service.app
+
+- url: /coach/.*
+  script: coach_service.app
+
+- url: /season/.*
+  script: season_service.app
+
+- url: /school/.*
+  script: school_service.app
+
+- url: /games/.*
+  script: game_service.app
+
+- url: /multigames/.*
+  script: game_multi_team_service.app
+
+- url: /crontask/scrape
+  script: load.app
+
+libraries:
+- name: webapp2
+  version: "2.5.2"
+
+- name: lxml
+  version: latest
