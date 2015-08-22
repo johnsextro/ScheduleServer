@@ -105,7 +105,7 @@ class Load(webapp2.RequestHandler):
 					game = '{"game_date": "%s", "time": "%s", "home": "%s", "away": "%s", "location": "%s", "id": "%s", "score": "%s"}' % (games[rowindex][self.GAME_DATE].text, games[rowindex][self.GAME_TIME].text, games[rowindex][self.HOME_TEAM].text, games[rowindex][self.AWAY_TEAM].text, games[rowindex][self.LOCATION][0].text, games[rowindex][self.GAME_ID].text, games[rowindex][self.SCORE].text)
 					gamelist.append(game)
 				except IndexError, e:
-					logging.debug("An offending game = %s" % (game))
+					logging.debug("jsonify_games encountered an error, skipping and continuing")
 					continue
 		return '{"games": [%s]}' % ", ".join(gamelist)
 
