@@ -49,9 +49,7 @@ class Load(webapp2.RequestHandler):
 		url = urlfetch.fetch(url=team_url, deadline=99)
 		if url.status_code == 200:
 			tree = etree.HTML(url.content)
-			# logging.info(url.content)
 			elements = tree.xpath('//table[@class="list"]//tr')
-			# logging.info(str(season[0].text.strip())
 			self.save_team_games(elements, team_id[1], team_id[0], self.get_season(tree), self.get_grade(tree))
 
 	def get_grade(self, tree):
@@ -74,7 +72,6 @@ class Load(webapp2.RequestHandler):
 		url = urlfetch.fetch(url=urlString, deadline=99)
 		if url.status_code == 200:
 			tree = etree.HTML(url.content)
-			# elements = tree.xpath('//*[@id="maincontent"]/table[2]/tbody/tr/td[2]/div[3]/table/tbody/tr[3]/td/table/tbody/tr/td[7]//option')
 			elements = tree.xpath('//td[@class="smalltext"][7]/select[@class="smalltext"]//option')
 			for team_name in elements:
 				attribs = team_name.attrib
@@ -83,7 +80,6 @@ class Load(webapp2.RequestHandler):
 		return teams
 
 	def save_team_games(self, games, team_id, coach, season, grade):
-		# todo: Need to account for teams that already exist in the database
 		t = team.Team(key_name=str(team_id))
 		t.teamId = str(team_id)
 		for val in self.schoolNames:
@@ -107,11 +103,9 @@ class Load(webapp2.RequestHandler):
 			if len(games[rowindex])>3 and games[rowindex][1].text is not None and games[rowindex][2].text is not None:
 				try:
 					game = '{"game_date": "%s", "time": "%s", "home": "%s", "away": "%s", "location": "%s", "id": "%s", "score": "%s"}' % (games[rowindex][self.GAME_DATE].text, games[rowindex][self.GAME_TIME].text, games[rowindex][self.HOME_TEAM].text, games[rowindex][self.AWAY_TEAM].text, games[rowindex][self.LOCATION][0].text, games[rowindex][self.GAME_ID].text, games[rowindex][self.SCORE].text)
-					# {"games": [{"game_date": "4/1/2013", "time": "1:00 PM", "home": "St. J & A", "away": "ICD", location": "St. Joes"}]}
 					gamelist.append(game)
 				except IndexError, e:
-					logging.debug(e)
-					logging.debug(games[rowindex])
+					logging.debug("An offending game = %s" % (game))
 					continue
 		return '{"games": [%s]}' % ", ".join(gamelist)
 

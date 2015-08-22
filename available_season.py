@@ -11,4 +11,8 @@ class AvailableSeasons(db.Model):
 		availableSeasons = AvailableSeasons()
 		q = db.Query(AvailableSeasons)
 		q = AvailableSeasons.all()
+		if q.count() == 0:
+			availableSeasons.season = 47
+			availableSeasons.put()
+			q = AvailableSeasons.all()
 		return q.run()
