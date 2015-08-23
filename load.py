@@ -8,6 +8,7 @@ import time
 from season_service import Season
 from team import Team
 from available_season import AvailableSeasons
+from individual_game import IndividualGame
 
 class Load(webapp2.RequestHandler):
 	GAME_ID = 0
@@ -92,18 +93,22 @@ class Load(webapp2.RequestHandler):
 				t.season = season
 				t.grade = grade
 				t.year = 2015
-				t.schedule = self.jsonify_games(games)
+				t.schedule = self.jsonify_games(games, team_id)
 				if t.school is not None and t.grade is not None:
 					t.put()
 				break
 
-	def jsonify_games(self, games):
+	def jsonify_games(self, games, team_id):
 		gamelist = []
 		for rowindex in range(len(games)):
 			if len(games[rowindex])>3 and games[rowindex][1].text is not None and games[rowindex][2].text is not None:
 				try:
 					game = '{"game_date": "%s", "time": "%s", "home": "%s", "away": "%s", "location": "%s", "id": "%s", "score": "%s"}' % (games[rowindex][self.GAME_DATE].text, games[rowindex][self.GAME_TIME].text, games[rowindex][self.HOME_TEAM].text, games[rowindex][self.AWAY_TEAM].text, games[rowindex][self.LOCATION][0].text, games[rowindex][self.GAME_ID].text, games[rowindex][self.SCORE].text)
 					gamelist.append(game)
+					ig = IndividualGame(teamId=str(team_id), 
+									gameId=games[rowindex][self.GAME_ID].text,
+									game=game)
+					ig.put()
 				except IndexError, e:
 					logging.debug("jsonify_games encountered an error, skipping and continuing")
 					continue
