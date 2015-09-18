@@ -1,8 +1,9 @@
 import logging
 import webapp2
+import json
+import urllib
 from google.appengine.api import urlfetch
 from google.appengine.api import memcache
-from lxml import etree
 import team
 import time
 from season_service import Season
@@ -11,61 +12,18 @@ from available_season import AvailableSeasons
 from individual_game import IndividualGame
 
 class Load(webapp2.RequestHandler):
-	GAME_ID = 0
-	GAME_DATE = 1
-	GAME_TIME = 2
-	LOCATION = 3
-	HOME_TEAM = 4
-	AWAY_TEAM = 5
-	SCORE = 6
 	schoolNames = ["ICOM", "2Rivers", "A.S.H.", "AS", "ASH", "All Saints", "Assumption", "Borromeo", "HS", "HT", "Holy Rosary", "Holy Spirit", "Holy Trinity", "ICD", "ICOM", "IHM", "J and A", "JA", "JandA", "LWCS", "Living Word", "S.H. Troy", "SC", "SESR", "SESR Carrie Mejia", "SH T", "SH Troy", "SJ", "SJ Cott", "Sacred Heart Troy", "St Cletus", "St Joe", "St Joe Cottleville", "St Josephville", "St Patrick", "St Paul", "St Peter", "St Peters", "St Theodore", "St. Cletus", "St. Ignatius", "St. Joe", "St. Joe Cottleville", "St. Joe Cott", "St. Joe Josephsville", "St. Patrick", "St. Paul", "St. Peter", "St. Rose", "St. Sabina", "St. Theo", "St. Theodore", "St.Joe Cottleville", "St.Patrick", "Sts J and A", "Sts JandA", "Sts. J and A", "Sts. J andA", "Sts. JandA", "St Joseph", "St. Joseph"]
 	
 	def get(self):
 		start_time = time.time()
-		availSeasons = AvailableSeasons()
-		for s in availSeasons.getSeasons():
-			logging.info("Beginning data load for season %d" % s.season)
-			teamIds = self.get_team_ids(s.season)
-			stcharlesurl = "http://www.cycstcharles.com/schedule.php?team=%s&pfv=y&sort=date&month=999&year=999&season=%d"
-			for team_id in teamIds:
-				team_url = stcharlesurl % (team_id[1], s.season)
-				self.fetch_team_schedule(team_url, team_id)
-			logging.info("Finished loading schedule data. Elapsed time (in mins): " + str((time.time() - start_time)/60))
-
-		if memcache.flush_all():
-			logging.info("Flushed everything from memcache.")
-		else:
-			logging.error("Error trying to flush the memcache.")
-
-		t = Team()
-		seasons = []
-		for team in t.getSeasons():
-			season = Season(season=team.season)
-			if season not in seasons:
-				seasons.append(season)
-		if not memcache.add('seasons', seasons):
-			logging.error('memcache failed to set')
-
-	def fetch_team_schedule(self, team_url, team_id):
-		url = urlfetch.fetch(url=team_url, deadline=99)
-		if url.status_code == 200:
-			tree = etree.HTML(url.content)
-			elements = tree.xpath('//table[@class="list"]//tr')
-			self.save_team_games(elements, team_id[1], team_id[0], self.get_season(tree), self.get_grade(tree))
-
-	def get_grade(self, tree):
-		grade = ''
-		gradeElement = tree.xpath('//table[@class="list"]//tr/td[@class="smalltext"][7]/select[@class="smalltext"]//option[@selected = "selected"]/../@label')
-		if (len(gradeElement) == 1):
-			grade = gradeElement[0].strip()
-		return grade	
-
-	def get_season(self, tree):
-		season = ''
-		seasonElement = tree.xpath('//table/tr/td[1]/select//option[@selected = "selected"]')
-		if (len(seasonElement) == 1):
-			season = seasonElement[0].text.strip()
-		return season
+		url = "http://slcycstcharlesdistrict.sportssignup.com/site/ClientSite/team_and_division_data"
+		form_fields = {"season_id": "season_id=1519074"}
+		form_data = urllib.urlencode(form_fields)
+		result = urlfetch.fetch(url=url,
+    		payload=form_data,
+    		method=urlfetch.POST,
+    		headers={'Content-Type': 'application/x-www-form-urlencoded'})
+		logging.info(json.dumps(result.content))
 
 	def get_team_ids(self, seasonId):
 		teams = []
@@ -114,11 +72,7 @@ class Load(webapp2.RequestHandler):
 					continue
 		return '{"games": [%s]}' % ", ".join(gamelist)
 
-app = webapp2.WSGIApplication([('/crontask/scrape', Load)],debug=True)
+app = webapp2.WSGIApplication([('/crontask/loadgames', Load)],debug=True)
 
 if __name__ == '__main__':
 	run_wsgi_app(application)
-
-
-
-# http://www.cycstcharles.com/schedule.php?season=32&conference=779&division=-1&team=-1&month=3&year=2013&pfv=y&sort=date
