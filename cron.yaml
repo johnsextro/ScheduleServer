@@ -1,4 +1,4 @@
 cron:
 - description: Nightly cron job to scrape the cyc website for schedule updates
-  url: /crontask/scrape
+  url: /crontask/loadgames
   schedule: every 150 mins

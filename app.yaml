@@ -30,6 +30,9 @@ handlers:
 - url: /crontask/scrape
   script: load.app
 
+- url: /crontask/loadgames
+  script: loadgames.app
+
 libraries:
 - name: webapp2
   version: "2.5.2"
