@@ -23,7 +23,13 @@ class Load(webapp2.RequestHandler):
     		payload=form_data,
     		method=urlfetch.POST,
     		headers={'Content-Type': 'application/x-www-form-urlencoded'})
-		logging.info(json.dumps(result.content))
+		parsed_json = json.loads(result.content)
+		for key, value in parsed_json.iteritems():
+			logging.info(key)
+			if value != "d-all":
+				for aTeam, aValue in value.iteritems():
+					logging.info("key %s, value: %s" % (aTeam, aValue))
+
 
 	def get_team_ids(self, seasonId):
 		teams = []
