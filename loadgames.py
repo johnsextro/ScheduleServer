@@ -17,7 +17,7 @@ class Load(webapp2.RequestHandler):
 	def get(self):
 		start_time = time.time()
 		url = "http://slcycstcharlesdistrict.sportssignup.com/site/ClientSite/team_and_division_data"
-		form_fields = {"season_id": "season_id=1519074"}
+		form_fields = {"season_id": "season_id=1519076"}
 		form_data = urllib.urlencode(form_fields)
 		result = urlfetch.fetch(url=url,
     		payload=form_data,
@@ -29,7 +29,19 @@ class Load(webapp2.RequestHandler):
 			if value != "d-all":
 				for aTeam, aValue in value.iteritems():
 					logging.info("key %s, value: %s" % (aTeam, aValue))
+					self.get_team_schedule("1519076", aValue[2:])
 
+	def get_team_schedule(self, seasonId, teamId):
+		url = "http://slcycstcharlesdistrict.sportssignup.com/site/ClientSiteData/schedule_data"
+		form_fields = {"season_id": "season_id=1519076", "team_id": teamId, "show_games": "T", "show_practices": "F", "show_other": "F"}
+		form_data = urllib.urlencode(form_fields)
+		result = urlfetch.fetch(url=url,
+    		payload=form_data,
+    		method=urlfetch.POST,
+    		headers={'Content-Type': 'application/x-www-form-urlencoded'})
+		parsed_json = json.loads(result.content)
+		for value in parsed_json:
+			logging.info(value["title"])
 
 	def get_team_ids(self, seasonId):
 		teams = []
